@@ -1,5 +1,11 @@
+
 import json
 import sys
+
+from multiprocessing.pool import CLOSE
+from sqlite3 import Timestamp
+from traceback import print_tb
+
 import yfinance as yf
 import pandas as pd
 
@@ -7,8 +13,13 @@ import time
 import random
 import datetime
 
-today = datetime.date.today().replace(day=1) - datetime.timedelta(days=1)
-yesterday = datetime.date.today().replace(day=1) - datetime.timedelta(days=2)
+import plotly.express as px
+
+from pymongo import MongoClient
+
+
+today = datetime.date.today()
+yesterday = datetime.date.today() - datetime.timedelta(days=1)
 
 stocks = ("MSFT", "MVIS", "GOOG", "SPOT", "INO", "OCGN", "ABML", "RLLCF", "JNJ", "PSFE")
 for stock in stocks:	
@@ -16,8 +27,9 @@ for stock in stocks:
 	data = stockdata.history(start= yesterday, end= today, interval = '1h' )
 	df = pd.DataFrame(data['Close'])
 	stored_datetime = data.index
-	#for row in 
-	#print(stored_datetime[0])
+	Kichaum={}
+	TIMESTAMP=[]
+	CLOSEVALUE=[]
 	
 	for idx,row in df.iterrows():
 		jsondata = {
@@ -28,9 +40,30 @@ for stock in stocks:
 		'52WeekLow' : stockdata.info["fiftyTwoWeekLow"]	
 		}
 		print(jsondata)
+		TIMESTAMP.append(jsondata["timestamp"])
+		CLOSEVALUE.append(jsondata["CloseValue"])
+  
+		Kichaum['timEstamp']=TIMESTAMP
+		Kichaum['closEvalue']=CLOSEVALUE
+  
+		dff=pd.DataFrame(Kichaum, columns=['timEstamp','closEvalue'])
+		#print(dff)
+		#print(f'{jsondata["timestamp"} : {jsondata["CloseValue"]}')
+		figures = px.line(x=TIMESTAMP, y=CLOSEVALUE, labels={'x':'Timestamp', 'y':'CloseValue'})
+		figures.show()
 
-	
-		
-	
 
 
+mydatabase = ''
+mycollection = ''
+
+def mongoConnect():
+       pass
+
+def insertData(record):
+    client = MongoClient("mongodb://localhost:27017/")
+    mydatabase = client[database] 
+    mycollection = mydatabase[collection]
+    mycollection.insert_one(record)
+
+mongoConnect()
